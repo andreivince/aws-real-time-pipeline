@@ -11,8 +11,8 @@ const ENDPOINT: string = INGEST_ENDPOINT; // Type assertion for TypeScript
 
 const agent = new https.Agent({ // This creates a agent that holds alive the connections
   keepAlive: true,
-  maxSockets: 1000, 
-  maxFreeSockets: 256, 
+  maxSockets: 1200, 
+  maxFreeSockets: 300, 
 });
 
 
