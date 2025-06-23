@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.788.0",
-    "axios": "^1.10.0"
+    "axios": "^1.10.0",
+    "cacheable-lookup": "^7.0.0"
   }
 }

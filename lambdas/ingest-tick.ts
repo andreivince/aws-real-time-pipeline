@@ -14,6 +14,8 @@ export const handler = async (event: any) => {
             }
         })
 
+
+
         await client.send(command)
     
         return {
