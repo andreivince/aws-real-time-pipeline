@@ -1,0 +1,8 @@
+{
+  "name": "traffic-simulator",
+  "version": "1.0.0",
+  "main": "sendTick.ts",
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  }
+}
