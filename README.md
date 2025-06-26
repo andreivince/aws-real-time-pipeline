@@ -55,24 +55,6 @@ Building trading systems, analytics dashboards, or real-time APIs? This project 
 | Errors                    | 0                  | 🟢 0                       |
 | Throttles                 | 0                  | 🟢 0                       |
 | Sustained Throughput      | ≥ 25k req/min      | 🟢 ~30,000 req/min         |
----
-
-## 🗺️ Roadmap (Updated Apr 24)
-
-<div style="background:#e0f7fa; padding:10px; border-radius:5px;">
-
-- ✅ **Apr 18** – Repo scaffolded, CDK deployed  
-- ✅ **Apr 24** – Ingest Lambda & DynamoDB simulation complete  
-- 🔜 **May 5** – Generate and validate simulated tick data  
-- 🔜 **May 19** – CI/CD pipeline running; unit test coverage ≥30%  
-- 🔜 **Jun 9** – REST API endpoint live (dev environment)  
-- 🔜 **Jun 23** – WebSocket API live + Real-time dashboard (Next.js)  
-- 🔜 **Jul 14** – Load test (500 RPS sustained) complete  
-- 🔜 **Aug 4** – Full-scale test (1,000 RPS / p95 <150ms) documented  
-- 🔜 **Aug 18** – Public beta available  
-- 🔜 **Sep 1** – Official "Show HN" launch (500 stars target)  
-
-</div>
 
 ---
 
@@ -125,23 +107,6 @@ This architecture ensures **low-latency, scalable, and cost-effective** real-tim
 The `traffic-simulator/sendTick.ts` script generates mock market data and sends
 it to the ingestion endpoint. Set the `INGEST_ENDPOINT` environment variable to
 the API Gateway URL before running the script.
-
----
-
-## 🚧 Immediate Next Steps (Updated Apr 24)
-
-<div style="background:#fff3e0; padding:15px; border-radius:5px; border-left: 5px solid #ff9800;">
-
-- ✅ **Apr 24** – Ingest Lambda & DynamoDB simulation completed successfully 🎉  
-- 🔜 **May 5** – Generate and validate simulated tick data to ensure data quality  
-- 🔜 **May 12** – Launch first local REST API query endpoint for ingestion validation  
-- 🔜 **May 19** – Develop initial Jest tests aiming for >10% coverage  
-- 🔜 **May 26** – Set up AWS CodeCatalyst for automated CI/CD pipeline  
-- 🔜 **Jun 2** – Begin integrating observability tools (CloudWatch, X-Ray, Grafana)  
-
-Focus is on **building robust data generation and query capabilities**, **establishing automated testing**, and **streamlining deployment workflows** to maintain high visibility on progress.
-
-</div>
 
 ---
 
