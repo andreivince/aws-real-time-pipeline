@@ -1,1 +1,6 @@
-traffic-simulator/.env
+node_modules/
+cdk.out/
+.env
+.env.*
+dist/
+.cache/
