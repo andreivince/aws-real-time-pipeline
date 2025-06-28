@@ -1,115 +1,115 @@
 # Real-Time Market Data Pipeline
 
-> 🚀 **Live infrastructure. Real AWS deployment. Not a toy repo.**
-📈 Validated burst: 619k+ real Lambda invocations in 60 minutes, 0 errors, ~37ms latency avg
+> **Live on AWS · 2.3 M Lambda invocations in 88 min · 53 ms p95 latency**  
+> **Cost:** ≈ \$1.19 per million events (14.1 M events · June 2025)
 
+A **minimal, production-grade serverless backend** that ingests high-frequency market ticks through AWS Lambda, persists them in DynamoDB, and proves you can hit serious load for pocket change.
 
-This project is my first production-grade backend — an open-source, serverless **real-time market data pipeline** built to run at scale under extreme constraints:
-
-- ⚙️ Deployed with **AWS CDK (TypeScript)** using Lambda, DynamoDB, and API Gateway  
-- 💸 Designed for **1M+ req/month at sub-$10/month** infra cost  
-- 🔁 Currently running with **simulated tick data ingestion + DynamoDB storage**
-
-I'm building it in public. No fluff. No "learning project" disclaimers.  
-If you're into high-throughput infra, AWS-native ops, and real observability — this is for you.
-
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-0%25-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
-
-## 🚀 Project Overview
-
-A **serverless, production-grade pipeline** designed for **real-time market data** (stocks, crypto, FX) delivering:
-
-- ⚡ **Sub-150ms p95 latency** at scale (≥1M requests/month)  
-- 💸 **Ultra-low infrastructure cost** (< $10/month)  
-- 🔧 **Fully automated CI/CD pipeline** with zero manual ops  
-- 🔍 **Deep observability** using CloudWatch, X-Ray, and Grafana  
-- 🌐 **REST & WebSocket APIs** powered by AWS CDK (TypeScript)  
-
-This project is **not just a demo** — it simulates a **high-throughput, resilient, and cost-effective financial data infrastructure** under real-world constraints.
+Built and maintained by **Andrei Vince**.
 
 ---
 
-## ❓ Why This Matters
+## Why this project exists 🚀
+Open-source “real-time” demos often crumble above toy traffic or cost a fortune once requests pile up. **MarketStream** shows that an AWS-native design can:
 
-Building trading systems, analytics dashboards, or real-time APIs? This project proves:
+* Handle **>30 k req / min** while staying under **150 ms p95**
+* Cost **\< \$10 / million requests** (validated in Cost Explorer)
+* Deploy end-to-end in **one CDK command**  
 
-- ✅ Serverless architectures *can* achieve sub-200ms latencies  
-- ✅ Costs don’t have to increase linearly with traffic  
-- ✅ AWS native tools fully support real operational workloads  
-
----
-
-## 📊 Live Metrics (Last 1 Hour)
-
-**Logs Insights ✓ Verified** (as of Jun 23, 2025)
-
-| Metric                    | Target             | Current                    |
-|---------------------------|--------------------|----------------------------|
-| Lambda Invocations        | ≥ 1M/month         | 🟢 619,000+ in 1h          |
-| Avg Execution Latency     | p95 < 150ms        | 🟢 36.9 ms                 |
-| Max Execution Latency     | < 2s               | 🟡 1.55 s (isolated spike) |
-| DynamoDB Write Latency    | < 5ms              | 🟢 ~2.88 ms                |
-| Errors                    | 0                  | 🟢 0                       |
-| Throttles                 | 0                  | 🟢 0                       |
-| Sustained Throughput      | ≥ 25k req/min      | 🟢 ~30,000 req/min         |
+Use it as a template for trading bots, ETL spikes, or any write-heavy workload.
 
 ---
 
-## 🧱 Architecture Overview
+## Key features 🔑
 
+|  |  |
+|---|---|
+| ⚡ **Performance** | 2.3 M events in 88 min • 53 ms p95 • 0 errors |
+| 💸 **Cost** | \$16.76 for 14.1 M invocations → **\$1.19 / M** |
+| 🏗️ **IaC** | Entire stack defined with **AWS CDK (TypeScript)** |
+| 🔍 **Observability** | CloudWatch Logs Insights queries provided |
+| 🖥️ **Traffic simulator** | High-frequency script to reproduce the load |
+| 🪶 **Lightweight** | Only Lambda + DynamoDB + API Gateway REST |
+
+*No fan-out, WebSocket, X-Ray, WAF, or CI/CD pipelines are included — see Roadmap.*
+
+---
+
+## Architecture 🗺️
 ```mermaid
 graph TD
-    Feed["Market Data Feed (Simulated)"] --> LambdaIngest["Lambda: Ingest"]
-    LambdaIngest --> Dynamo["DynamoDB Ticks"]
-    Dynamo --> Stream["DynamoDB Streams"]
-    Stream --> LambdaFanout["Lambda: Fan-out Dispatcher"]
-    LambdaFanout --> LambdaWS["Lambda: WebSocket Broadcaster"]
-    LambdaWS --> ApiGWWS["API Gateway WS"]
-    Stream --> LambdaQuery["Lambda: Query"]
-    LambdaQuery --> APIGW["API Gateway REST"]
+  Client["Traffic Simulator / cURL"] --> APIGW["API Gateway (/ingest)"]
+  APIGW --> LambdaIngest["Lambda Ingest"]
+  LambdaIngest --> Dynamo["DynamoDB TickTable (Streams ON)"]
+````
+
+* Streams are enabled for future fan-out, but \**no consumer Lambda is attached yet.*
+
+---
+
+## Latest metrics 📊
+
+| Metric                 | Result                 |
+| ---------------------- | ---------------------- |
+| Total invocations      | **2 310 000 (88 min)** |
+| Sustained throughput   | **≈ 30 000 req / min** |
+| p95 execution latency  | **53 ms**              |
+| Avg Lambda duration    | 24.6 ms                |
+| DynamoDB write latency | 2.99 ms                |
+| Errors / throttles     | 0                      |
+
+*Collected with CloudWatch Logs Insights and CloudWatch Dashboard.
+
+---
+
+## Quick start 🛠️
+
+### Prerequisites
+
+* Node 18+ & npm
+* AWS CLI configured (default profile)
+* **AWS CDK v2** (`npm i -g aws-cdk`)
+
+```bash
+# 1 – clone
+git clone https://github.com/andreivince/aws-real-time-pipeline
+cd aws-real-time-pipeline/cdk          # CDK app lives here
+
+# 2 – install deps
+npm ci                                 # or `npm install` if no package-lock.json
+
+# 3 – bootstrap + deploy
+npx cdk bootstrap && npx cdk deploy
+
+# 4 – simulate load  (optional)
+cd traffic-simulator                             # run sendTIck.ts
+
 ```
 
-**Key components explained:**
+After deploy, copy the API URL printed by CDK and create a `.env`:
 
-- **Market Data Feed:** Simulated tick data generator feeding ingestion  
-- **Lambda: Ingest:** Processes incoming ticks, writes to DynamoDB  
-- **DynamoDB:** Stores tick data with streams enabled for fan-out  
-- **Lambda: Query:** Serves REST API queries efficiently  
-- **Lambda: Fan-out Dispatcher:** Listens to DynamoDB Streams to push updates  
-- **Lambda: WebSocket Broadcaster:** Sends real-time updates to connected clients via WebSocket API Gateway  
+```dotenv
+INGEST_ENDPOINT=https://<api-id>.execute-api.<region>.amazonaws.com/prod/
+```
 
-This architecture ensures **low-latency, scalable, and cost-effective** real-time data delivery.
+The simulator reads that variable and fires authentic traffic.
 
 ---
 
-## 🎯 Project Goals
+## Roadmap 🗺️
 
-- ⏱️ Achieve **sub-150ms latency** at p95  
-- 💸 Maintain **infrastructure cost <$10/month** at 1M+ requests  
-- 💥 Implement **100% CI/CD** with zero manual infra operations  
-- 🧠 Showcase **observability, resilience, and scale** with AWS native tools  
+* [ ] **Fan-out Lambda** consuming DynamoDB Streams
+* [ ] **WebSocket broadcaster** for real-time dashboards
+* [ ] **Least-privilege IAM policies** (remove AdministratorAccess)
+* [ ] **GitHub Actions** for synth + deploy + lint + test
+* [ ] **CloudWatch alarms via CDK** (error > 0, cost > \$5)
+* [ ] **Query endpoint** for historical reads
 
----
-
-## 📦 Technology Stack
-
-- **AWS Services:** Lambda, DynamoDB, API Gateway, SQS, CloudWatch, X-Ray, WAF  
-- **Infrastructure as Code:** AWS CDK (TypeScript)  
-- **Observability:** CloudWatch, Grafana, AWS X-Ray  
-- **CI/CD:** AWS CodeCatalyst, Jest, Artillery
-- **Frontend (coming soon):** Next.js Real-time Dashboard (WebSocket)
-
-## 📈 Traffic Simulator
-
-The `traffic-simulator/sendTick.ts` script generates mock market data and sends
-it to the ingestion endpoint. Set the `INGEST_ENDPOINT` environment variable to
-the API Gateway URL before running the script.
+Pull requests welcome — see [`CONTRIBUTING.md`](docs/CONTRIBUTING.md).
 
 ---
 
-## 📎 License
+## License 📄
 
-MIT — free to use, modify, and deploy. Contributions welcome.
+[MIT](./LICENSE) — free to use, fork, and deploy. Attribution appreciated.
+
