@@ -35,6 +35,20 @@ Use it as a template for trading bots, ETL spikes, or any write-heavy workload.
 
 ---
 
+## Resilience & Failure Handling 🛡️
+
+This project is designed to avoid silent data loss even under failure conditions:
+
+| Mechanism             | Configured |
+|-----------------------|------------|
+| Lambda retryAttempts  | ✅ 2 retries on failure |
+| Dead Letter Queue (DLQ) | ✅ SQS queue stores failed events for debugging or replay |
+| Alerting / Replay     | ❌ Not yet implemented (see Roadmap) |
+
+Failures after all retries are automatically sent to the DLQ via `onFailure: SqsDestination`, ensuring you can inspect and recover payloads later without data loss.
+
+---
+
 ## Architecture 🗺️
 ```mermaid
 graph TD
