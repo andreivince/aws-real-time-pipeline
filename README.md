@@ -1,129 +1,126 @@
-# Real-Time Market Data Pipeline
+# MarketStream – Real‑Time Market Data Pipeline
 
-> **Live on AWS · 2.3 M Lambda invocations in 88 min · 53 ms p95 latency**  
-> **Cost:** ≈ \$1.19 per million events (14.1 M events · June 2025)
+> **Live on AWS · 2.3 M Lambda invocations in 88 min · 53 ms p95 latency**
+> **Infra cost:** ≈ **\$1.19 per million events** (14.1 M events – June 2025)
 
-A **minimal, production-grade serverless backend** that ingests high-frequency market ticks through AWS Lambda, persists them in DynamoDB, and proves you can hit serious load for pocket change.
+A **production‑grade, open‑source, serverless backend** that ingests high‑frequency market ticks, persists them in DynamoDB, and serves them back on‑demand — **all for pocket change**.
 
-Built and maintained by **Andrei Vince**.
-
----
-
-## Why this project exists 🚀
-Open-source “real-time” demos often crumble above toy traffic or cost a fortune once requests pile up. **MarketStream** shows that an AWS-native design can:
-
-* Handle **>30 k req / min** while staying under **150 ms p95**
-* Cost **\< \$10 / million requests** (validated in Cost Explorer)
-* Deploy end-to-end in **one CDK command**  
-
-Use it as a template for trading bots, ETL spikes, or any write-heavy workload.
+Built & maintained by **Andrei Vince**.
 
 ---
 
-## Key features 🔑
+## Why this project exists 🚀
 
-|  |  |
-|---|---|
-| ⚡ **Performance** | 2.3 M events in 88 min • 53 ms p95 • 0 errors |
-| 💸 **Cost** | \$16.76 for 14.1 M invocations → **\$1.19 / M** |
-| 🏗️ **IaC** | Entire stack defined with **AWS CDK (TypeScript)** |
-| 🔍 **Observability** | CloudWatch Logs Insights queries provided |
-| 🖥️ **Traffic simulator** | High-frequency script to reproduce the load |
-| 🪶 **Lightweight** | Only Lambda + DynamoDB + API Gateway REST |
+Most “real‑time” demos break above toy traffic or explode your AWS bill. **MarketStream** proves an AWS‑native design can:
 
-*No fan-out, WebSocket, X-Ray, WAF, or CI/CD pipelines are included — see Roadmap.*
+* Handle **> 30 k req/min** under **150 ms p95**
+* Cost **< \$10 / million** requests (verified in Cost Explorer)
+* Deploy end‑to‑end with **`cdk deploy` once**
+
+Use it as a template for trading bots, ETL spikes, or any write‑heavy workload.
 
 ---
 
-## Resilience & Failure Handling 🛡️
+## Key Features 🔑
 
-This project is designed to avoid silent data loss even under failure conditions:
+\| | |
+|‑‑‑|‑‑‑|
+\| ⚡ **Performance** | 2.3 M events / 88 min • 53 ms p95 • 0 errors |
+\| 💸 **Cost** | \$16.76 for 14.1 M invocations → **\$1.19 / M** |
+\| 🏗️ **IaC** | Full stack in **AWS CDK (TypeScript)** |
+\| 📊 **Observability** | CloudWatch Logs Insights + metrics dashboards |
+\| 🖥️ **Traffic simulator** | High‑freq script to reproduce the load |
+\| 🪶 **Lean stack** | Only Lambda + DynamoDB + API Gateway |
 
-| Mechanism             | Configured |
-|-----------------------|------------|
-| Lambda retryAttempts  | ✅ 2 retries on failure |
-| Dead Letter Queue (DLQ) | ✅ SQS queue stores failed events for debugging or replay |
-| Alerting / Replay     | ❌ Not yet implemented (see Roadmap) |
-
-Failures after all retries are automatically sent to the DLQ via `onFailure: SqsDestination`, ensuring you can inspect and recover payloads later without data loss.
+*Two API flavours:* cheap **HTTP API** for `/ingest`, feature‑rich **REST API** for `/query` (quotas‑ready).
 
 ---
 
-## Architecture 🗺️
+## Resilience & Failure Handling 🛡️
+
+\| Mechanism | Status |
+|‑‑‑|‑‑‑|
+\| Lambda **`retryAttempts = 2`** | ✅ |
+\| SQS **DLQ** via `onFailure` | ✅ |
+\| Alerting / Replay Lambda | 🔜 Roadmap |
+
+After two failed attempts, payloads land in the DLQ so you can inspect or replay — **no silent data loss**.
+
+---
+
+## Architecture 🗺️
+
 ```mermaid
 graph TD
-  Client["Traffic Simulator / cURL"] --> APIGW["API Gateway (/ingest)"]
-  APIGW --> LambdaIngest["Lambda Ingest"]
-  LambdaIngest --> Dynamo["DynamoDB TickTable (Streams ON)"]
-````
+  Client["Traffic Simulator"] --> HTTPAPI[/HTTP API (/ingest)/]
+  HTTPAPI --> LambdaIngest[(Ingest Lambda)]
+  LambdaIngest --> Dynamo[(DynamoDB TickTable)]
 
-* Streams are enabled for future fan-out, but \**no consumer Lambda is attached yet.*
+  User["Dashboard / SDK"] --> RESTAPI[/REST API (/query)/]
+  RESTAPI --> QueryLambda[(Query Lambda)]
+  QueryLambda --> Dynamo
+```
 
----
-
-## Latest metrics 📊
-
-| Metric                 | Result                 |
-| ---------------------- | ---------------------- |
-| Total invocations      | **2 310 000 (88 min)** |
-| Sustained throughput   | **≈ 30 000 req / min** |
-| p95 execution latency  | **53 ms**              |
-| Avg Lambda duration    | 24.6 ms                |
-| DynamoDB write latency | 2.99 ms                |
-| Errors / throttles     | 0                      |
-
-*Collected with CloudWatch Logs Insights and CloudWatch Dashboard.
+*Streams are ON for future fan‑out, but no consumer Lambda is attached yet.*
 
 ---
 
-## Quick start 🛠️
+## Latest Metrics 📈
 
-### Prerequisites
+\| Metric | Value |
+|‑‑‑|‑‑‑|
+\| Total invocations | **2 310 000 (88 min)** |
+\| Sustained throughput | **≈ 30 000 req/min** |
+\| p95 execution | **53 ms** |
+\| Avg Lambda duration | 24.6 ms |
+\| Dynamo write latency | 2.99 ms |
+\| Errors / throttles | 0 |
 
-* Node 18+ & npm
-* AWS CLI configured (default profile)
-* **AWS CDK v2** (`npm i -g aws-cdk`)
+*Collected via CloudWatch Logs Insights.*
+
+---
+
+## Quick Start 🛠️
 
 ```bash
-# 1 – clone
-git clone https://github.com/andreivince/aws-real-time-pipeline
-cd aws-real-time-pipeline/cdk          # CDK app lives here
+# 1 – clone
+$ git clone https://github.com/andreivince/aws-real-time-pipeline
+$ cd aws-real-time-pipeline/cdk
 
-# 2 – install deps
-npm ci                                 # or `npm install` if no package-lock.json
+# 2 – deps
+$ npm ci
 
-# 3 – bootstrap + deploy
-npx cdk bootstrap && npx cdk deploy
+# 3 – bootstrap + deploy
+$ npx cdk bootstrap && npx cdk deploy
 
-# 4 – simulate load  (optional)
-cd traffic-simulator                             # run sendTIck.ts
-
+# 4 – ( optional ) simulate load
+$ cd ../traffic-simulator && node sendTick.js
 ```
 
-After deploy, copy the API URL printed by CDK and create a `.env`:
+After deploy, grab the two endpoints printed by CDK:
 
 ```dotenv
-INGEST_ENDPOINT=https://<api-id>.execute-api.<region>.amazonaws.com/prod/
+INGEST_ENDPOINT=https://<http‑api‑id>.execute-api.<region>.amazonaws.com/ingest
+QUERY_ENDPOINT=https://<rest‑api‑id>.execute-api.<region>.amazonaws.com/prod/query
 ```
 
-The simulator reads that variable and fires authentic traffic.
+The simulator uses `INGEST_ENDPOINT`; your dashboard hits `QUERY_ENDPOINT`.
 
 ---
 
-## Roadmap 🗺️
+## Roadmap 🗺️
 
-* [ ] **Fan-out Lambda** consuming DynamoDB Streams
-* [ ] **WebSocket broadcaster** for real-time dashboards
-* [ ] **Least-privilege IAM policies** (remove AdministratorAccess)
-* [ ] **GitHub Actions** for synth + deploy + lint + test
-* [ ] **CloudWatch alarms via CDK** (error > 0, cost > \$5)
-* [ ] **Query endpoint** for historical reads
+* [ ] **Fan‑out Lambda** (Dynamo Streams → SQS per client)
+* [ ] **WebSocket broadcast** for live dashboards
+* [ ] **Least‑privilege IAM** (drop AdministratorAccess)
+* [ ] **GitHub Actions CI/CD** (lint + test + deploy)
+* [ ] **CloudWatch alarms** (error > 0, cost > \$5)
+* [ ] **Replay Lambda** for DLQ
 
-Pull requests welcome — see [`CONTRIBUTING.md`](docs/CONTRIBUTING.md).
+Contributions welcome — see **`docs/CONTRIBUTING.md`**.
 
 ---
 
-## License 📄
+## License 📄
 
-[MIT](./LICENSE) — free to use, fork, and deploy. Attribution appreciated.
-
+[MIT](LICENSE) – free to fork & deploy. Attribution appreciated.
