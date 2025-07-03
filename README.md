@@ -50,20 +50,23 @@ No payload is silently lost: after the final retry the event lands in the DLQ fo
 ## Architecture 🗺️
 
 ```mermaid
-graph TD
-  subgraph Write Path (cheap)
-    Client -->|POST /ingest| HttpAPI[(API Gateway HTTP)]
-    HttpAPI --> IngestLambda[Lambda • ingest-tick]
-    IngestLambda --> Dynamo[(DynamoDB Ticks Table)]
+flowchart TD
+  %% Write path (cheap HTTP API)
+  subgraph "Write Path (cheap)"
+    Client["Client / Simulator"] -->|"POST /ingest"| HttpAPI["API Gateway HTTP"]
+    HttpAPI --> IngestLambda["Lambda: ingest‑tick"]
+    IngestLambda --> Dynamo[("DynamoDB Ticks Table")]
   end
 
-  subgraph Read Path (user-facing)
-    RestAPI[(API Gateway REST)] -->|GET /query| QueryLambda[Lambda • query-tick]
+  %% Read path (REST API with quotas)
+  subgraph "Read Path (user‑facing)"
+    RestAPI["API Gateway REST"] -->|"GET /query"| QueryLambda["Lambda: query‑tick"]
     QueryLambda --> Dynamo
   end
 
-  IngestLambda -. failures .-> DLQ[(SQS Dead Letter Queue)]
-  QueryLambda  -. failures .-> DLQ
+  %% Failure flow
+  IngestLambda -. "failures" .-> DLQ[("SQS Dead‑Letter Queue")]
+  QueryLambda  -. "failures" .-> DLQ
 ````
 
 *Streams are enabled for fan-out, but no consumer Lambda is attached yet.*
