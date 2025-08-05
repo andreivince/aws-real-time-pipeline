@@ -9,6 +9,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as destinations from 'aws-cdk-lib/aws-lambda-destinations';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 export class MarketStream extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -21,6 +22,45 @@ export class MarketStream extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY, // During development, change when goes to prod
     });
 
+    const dedupTable = new dynamodb.Table(this, "DedupTable", {
+      partitionKey: { name: "dedupeKey", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // During development, change when goes to prod or no I think I'm fine with that
+      timeToLiveAttribute: "ttl", // Automatically delete items after a certain time
+    });
+
+
+    const fanoutLambda = new NodejsFunction(this, "FanoutLambda", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, "../../lambdas/fanout-tick.ts"),
+      handler: "handler", // Name of the file + Handler
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(10),
+      environment: {
+        DEDUP_TABLE_NAME: dedupTable.tableName,
+      }
+    });
+    tickTable.grantStreamRead(fanoutLambda); // Grant the Lambda function read access to the DynamoDB stream
+    dedupTable.grantWriteData(fanoutLambda); // Grant the Lambda function write access to the deduplication table
+
+    fanoutLambda.addEventSource(
+      new DynamoEventSource(tickTable, {
+        startingPosition: lambda.StartingPosition.LATEST, // Start reading from the latest records
+        batchSize: 100, // It's not min, it's the max, if only 23 records are available, it will only process those
+        retryAttempts: 2, // Retry on failure
+        bisectBatchOnError: true, // Split batch on error and eventually isolate the problem
+      })
+    );
+    dedupTable.grantWriteData(fanoutLambda);
+
+    const fanoutQueue = new sqs.Queue(this, "FanoutQueue", {
+      retentionPeriod: cdk.Duration.days(3), // Retain messages for 3 days,
+      visibilityTimeout: cdk.Duration.seconds(30), // Visibility timeout for processing messages
+    });
+    fanoutQueue.grantSendMessages(fanoutLambda); // Grant the Lambda function permission to send messages to the queue  
+    fanoutLambda.addEnvironment("FANOUT_QUEUE_URL", fanoutQueue.queueUrl); // Pass the queue URL to the Lambda function
+    
+    
     const dlq = new sqs.Queue(this, "IngestDQL", {
       retentionPeriod: cdk.Duration.days(3),
     });
