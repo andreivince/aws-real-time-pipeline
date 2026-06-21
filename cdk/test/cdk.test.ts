@@ -1,17 +1,22 @@
-// import * as cdk from 'aws-cdk-lib';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as Cdk from '../lib/cdk-stack';
+import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import { MarketStream } from '../lib/cdk-stack';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/cdk-stack.ts
-test('SQS Queue Created', () => {
-//   const app = new cdk.App();
-//     // WHEN
-//   const stack = new Cdk.CdkStack(app, 'MyTestStack');
-//     // THEN
-//   const template = Template.fromStack(stack);
+test('creates ingestion, fanout, and query resources', () => {
+  const app = new cdk.App();
+  const stack = new MarketStream(app, 'TestMarketStream');
+  const template = Template.fromStack(stack);
 
-//   template.hasResourceProperties('AWS::SQS::Queue', {
-//     VisibilityTimeout: 300
-//   });
+  template.resourceCountIs('AWS::Lambda::Function', 3);
+  template.resourceCountIs('AWS::DynamoDB::Table', 2);
+  template.resourceCountIs('AWS::SQS::Queue', 2);
+  template.hasResourceProperties('AWS::DynamoDB::Table', {
+    BillingMode: 'PAY_PER_REQUEST',
+    StreamSpecification: {
+      StreamViewType: 'NEW_IMAGE',
+    },
+  });
+  template.hasResourceProperties('AWS::ApiGatewayV2::Route', {
+    RouteKey: 'POST /ingest',
+  });
 });

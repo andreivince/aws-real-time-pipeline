@@ -14,6 +14,8 @@ export class MarketStream extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const repoLockFile = path.join(__dirname, "../../package-lock.json");
+
     const tickTable = new dynamodb.Table(this, "TickTable", {
       partitionKey: { name: "symbol", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "timestamp", type: dynamodb.AttributeType.NUMBER },
@@ -33,6 +35,7 @@ export class MarketStream extends cdk.Stack {
     const fanoutLambda = new NodejsFunction(this, "FanoutLambda", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "../../lambdas/fanout-tick.ts"),
+      depsLockFilePath: repoLockFile,
       handler: "handler", // Name of the file + Handler
       memorySize: 128,
       timeout: cdk.Duration.seconds(10),
@@ -71,6 +74,7 @@ export class MarketStream extends cdk.Stack {
     const ingestLambda = new NodejsFunction(this, "IngestTickFunction", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "../../lambdas/ingest-tick.ts"), // Portable and works in all dev env
+      depsLockFilePath: repoLockFile,
       handler: "handler", // Name of the file + Handler
       retryAttempts: 2, // Retry on failure
       onFailure: new destinations.SqsDestination(dlq), // Send to DLQ on failure
@@ -100,6 +104,7 @@ export class MarketStream extends cdk.Stack {
     const queryLambda = new NodejsFunction(this, "QueryLambda", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "../../lambdas/query-tick.ts"), // Portable and works in all dev env
+      depsLockFilePath: repoLockFile,
       handler: "handler", // Name of the file + Handler
       retryAttempts: 2, // Retry on failure
       onFailure: new destinations.SqsDestination(dlq), // Send to DLQ on failure
