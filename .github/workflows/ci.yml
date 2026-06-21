@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate CDK project
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cdk/package-lock.json
+            traffic-simulator/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install CDK dependencies
+        working-directory: cdk
+        run: npm ci
+
+      - name: Install traffic simulator dependencies
+        working-directory: traffic-simulator
+        run: npm ci
+
+      - name: Run root high-severity audit
+        run: npm_config_audit_level=high npm audit
+
+      - name: Run CDK high-severity audit
+        working-directory: cdk
+        run: npm_config_audit_level=high npm audit
+
+      - name: Run CDK tests
+        working-directory: cdk
+        run: npm test
+
+      - name: Synthesize CDK stack
+        working-directory: cdk
+        run: npx cdk synth

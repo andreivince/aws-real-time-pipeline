@@ -1,5 +1,7 @@
 # MarketStream – Real‑Time Market Data Pipeline
 
+[![CI](https://github.com/andreivince/aws-real-time-pipeline/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/andreivince/aws-real-time-pipeline/actions/workflows/ci.yml)
+
 > **Live on AWS • 2.3 M Lambda invocations in 88 min • 53 ms p95 latency**
 > **Cost:** ≈ \$1.19 per million events (14.1 M events • June 2025)
 
@@ -137,7 +139,8 @@ INGEST_ENDPOINT=https://<http‑api‑id>.execute-api.<region>.amazonaws.com/ing
 * [x] **Fan‑out Lambda** consuming DynamoDB Streams ← *done!* ✅
 * [ ] **WebSocket broadcaster** (push ticks to dashboards)
 * [ ] **Least‑privilege IAM policies** (remove AdministratorAccess)
-* [ ] **GitHub Actions CI/CD** (synth + deploy + lint + test)
+* [x] **GitHub Actions CI** (install + audit gate + test + synth)
+* [ ] **Post-deploy smoke test** (optional workflow with user-provided secrets)
 * [ ] **CloudWatch alarms** via CDK (errors > 0, cost >\$5)
 * [x] **Query endpoint** (`/query`) for historical reads ← *done!* ✅
 * [ ] **Replay Lambda** to drain DLQ automatically
